@@ -11,10 +11,12 @@ public class FirstPersonCameraControl : MonoBehaviour
      public float yMinLimit = -90f;
      public float yMaxLimit = 90f;
      public float smoothTime = 10;
+     public float zoomValue = 1f;
      float rotationYAxis = 0.0f;
      float rotationXAxis = 0.0f;
      float velocityX = 0.0f;
      float velocityY = 0.0f;
+     float currentZoom = 0f;
 
      float distanceOffset;
      // Use this for initialization
@@ -32,7 +34,11 @@ public class FirstPersonCameraControl : MonoBehaviour
      {
          if (target)
          {
-             
+             if(Input.GetMouseButton(1)){
+                 currentZoom = Mathf.MoveTowards(currentZoom, zoomValue, Time.deltaTime/0.2f);
+             }else{
+                currentZoom = Mathf.MoveTowards(currentZoom, 0f, Time.deltaTime/0.2f);
+             }
             //  if (Input.GetMouseButton(0))
             //  {
                  velocityX += xSpeed * Input.GetAxis("Mouse X") * Time.deltaTime;
@@ -46,7 +52,7 @@ public class FirstPersonCameraControl : MonoBehaviour
              Quaternion toRotation = Quaternion.Euler(rotationXAxis, rotationYAxis, 0);
              Quaternion rotation = toRotation;
  
-             Vector3 negDistance = new Vector3(0.0f, 0.0f, -0.0f);
+             Vector3 negDistance = new Vector3(0.0f, 0.0f, currentZoom);
              Vector3 position = rotation * negDistance + target.position;
 
             target.transform.Rotate(Vector3.up * velocityX);

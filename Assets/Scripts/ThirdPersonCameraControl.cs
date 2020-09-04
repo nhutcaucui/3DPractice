@@ -14,10 +14,14 @@ public class ThirdPersonCameraControl : MonoBehaviour
      public float distanceMin = 1f;
      public float distanceMax = 5f;
      public float smoothTime = 10;
+     public float zoomValue = 1f;
+     public float shoulderOffset = 0f; // neg for left
+     public float heightOffset = 0f;
      float rotationYAxis = 0.0f;
      float rotationXAxis = 0.0f;
      float velocityX = 0.0f;
      float velocityY = 0.0f;
+     float currentZoom = 0f;
 
      float distanceOffset;
      // Use this for initialization
@@ -57,6 +61,11 @@ public class ThirdPersonCameraControl : MonoBehaviour
      {
          if (target)
          {
+             if(Input.GetMouseButton(1)){
+                 currentZoom = Mathf.MoveTowards(currentZoom, zoomValue, Time.deltaTime/0.2f);
+             }else{
+                currentZoom = Mathf.MoveTowards(currentZoom, 0f, Time.deltaTime/0.2f);
+             }
             //distance = Mathf.Clamp(distance - Input.GetAxis("Mouse ScrollWheel") * 5, distanceMin, distanceMax);
             //  if (Input.GetMouseButton(0))
             //  {
@@ -71,7 +80,7 @@ public class ThirdPersonCameraControl : MonoBehaviour
              Quaternion toRotation = Quaternion.Euler(rotationXAxis, rotationYAxis, 0);
              Quaternion rotation = toRotation;
             
-             Vector3 negDistance = new Vector3(0.0f, 0.0f, -distance+distanceOffset);
+             Vector3 negDistance = new Vector3(shoulderOffset, heightOffset, -distance+distanceOffset+currentZoom);
              Vector3 position = rotation * negDistance + target.position;
  
              transform.rotation = rotation;

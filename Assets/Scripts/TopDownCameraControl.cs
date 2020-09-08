@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class TopDownCameraControl : MonoBehaviour
+public class TopDownCameraControl : AbstractCamera
 {
     public float initX = 0f;
     public float initZ = 0f;
@@ -50,17 +50,22 @@ public class TopDownCameraControl : MonoBehaviour
     }
 
      private void Update() {
+        CameraController();
+    }
+
+    public override void  CameraController(){
         if (Input.GetAxis("Mouse ScrollWheel") < 0f && currentHeight < maxHeight)
         {
             currentHeight = Mathf.Clamp(currentHeight + zoomStep, minHeight, maxHeight);
-            currentAngle = Mathf.Clamp(currentAngle+angleStep, 0f, initAngle);
+            currentAngle = Mathf.Clamp(currentAngle + angleStep, 0f, initAngle);
         }
         if (Input.GetAxis("Mouse ScrollWheel") > 0f && currentHeight > minHeight)
         {
             currentHeight = Mathf.Clamp(currentHeight - zoomStep, minHeight, maxHeight);
             currentAngle = Mathf.Clamp(currentAngle - angleStep, 0f, initAngle);
         }
-        if(Input.GetKeyDown(KeyCode.Space)){
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
             Vector3 jump = new Vector3(target.transform.position.x, transform.position.y, target.transform.position.z - (currentHeight * Mathf.Tan(initAngle)));
             transform.position = jump;
         }
@@ -74,7 +79,7 @@ public class TopDownCameraControl : MonoBehaviour
             transform.position = pos;
         }
         if(transform.eulerAngles.x > currentAngle || transform.eulerAngles.x < currentAngle){
-            Debug.Log(transform.eulerAngles.x);
+//            Debug.Log(transform.eulerAngles.x);
             float rot = Mathf.MoveTowards(transform.eulerAngles.x, currentAngle, 10f * Time.deltaTime / zoomSpeed);
             Quaternion q = Quaternion.Euler(rot, transform.eulerAngles.y, transform.eulerAngles.z);
             transform.rotation = q;

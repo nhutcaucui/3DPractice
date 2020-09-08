@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class TopDownCameraMobileControl : MonoBehaviour
+public class TopDownCameraMobileControl : AbstractCamera
 {
     public float initX = 0f;
     public float initZ = 0f;
@@ -44,40 +44,41 @@ public class TopDownCameraMobileControl : MonoBehaviour
         Quaternion rotation = Quaternion.AngleAxis(initAngle,Vector3.right);
         transform.rotation = rotation;
         Cursor.lockState = CursorLockMode.Confined;
-        cam = gameObject.GetComponent<Camera>();
+        if(gameObject.GetComponent<Camera>() != null){
+            cam = gameObject.GetComponent<Camera>();
+        }
     }
 
-     private void Update() {
-         if(Input.GetMouseButtonDown(0)){
-             touchStart = Input.mousePosition;
-             return;
-         }
-         if(Input.GetMouseButton(0)){
+    // Update is called once per frame
+
+    private void Update()
+    {
+        CameraController();
+    }
+
+    public override void CameraController()
+    {
+        if (Input.GetMouseButtonDown(0))
+        {
+            touchStart = Input.mousePosition;
+            return;
+        }
+        if (Input.GetMouseButton(0))
+        {
+            if(cam != null){
             Vector3 pos = cam.ScreenToViewportPoint(Input.mousePosition - touchStart);
             Vector3 move = new Vector3(pos.x * speed * Time.deltaTime, 0, pos.y * speed * Time.deltaTime);
 
-            if(inverted){
-                move = - move;
+            if (inverted)
+            {
+                move = -move;
             }
 
             transform.Translate(move, Space.World);
-         }
-        // if (Input.GetAxis("Mouse ScrollWheel") < 0f && currentHeight < maxHeight)
-        // {
-        //     currentHeight = Mathf.Clamp(currentHeight + zoomStep, minHeight, maxHeight);
-        //     currentAngle = Mathf.Clamp(currentAngle+angleStep, 0f, initAngle);
-        // }
-        // if (Input.GetAxis("Mouse ScrollWheel") > 0f && currentHeight > minHeight)
-        // {
-        //     currentHeight = Mathf.Clamp(currentHeight - zoomStep, minHeight, maxHeight);
-        //     currentAngle = Mathf.Clamp(currentAngle - angleStep, 0f, initAngle);
-        // }
-        // if(Input.GetKeyDown(KeyCode.Space)){
-        //     Vector3 jump = new Vector3(target.transform.position.x, transform.position.y, target.transform.position.z - (currentHeight * Mathf.Tan(initAngle)));
-        //     transform.position = jump;
-        // }
+            }
+        }
     }
-    // Update is called once per frame
+
     void LateUpdate()
     {
         // if(transform.position.y > currentHeight || transform.position.y < currentHeight){

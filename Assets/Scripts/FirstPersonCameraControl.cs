@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class FirstPersonCameraControl : MonoBehaviour
+public class FirstPersonCameraControl : AbstractCamera
 {
     // Start is called before the first frame update
      public Transform target;
@@ -22,9 +22,22 @@ public class FirstPersonCameraControl : MonoBehaviour
      // Use this for initialization
      void Start()
      {
+         Debug.Log("startCamera");
          Vector3 angles = transform.eulerAngles;
          rotationYAxis = angles.y;
          rotationXAxis = angles.x;
+
+         if(target == null){
+         
+            GameObject gObject = GameObject.FindWithTag("Player");
+            if(gObject != null){
+                Debug.Log("found player");
+                target = gObject.transform;
+            }
+         }
+         if(target == null){
+             return;
+         }
          transform.position = target.position;
      }
      void Update(){
@@ -55,7 +68,8 @@ public class FirstPersonCameraControl : MonoBehaviour
              Vector3 negDistance = new Vector3(0.0f, 0.0f, currentZoom);
              Vector3 position = rotation * negDistance + target.position;
 
-            target.transform.Rotate(Vector3.up * velocityX);
+            target.transform.rotation = rotation;
+            
             transform.position = position;
              transform.rotation = rotation;
             
@@ -75,5 +89,8 @@ public class FirstPersonCameraControl : MonoBehaviour
          if (angle > 360F)
              angle -= 360F;
          return Mathf.Clamp(angle, min, max);
+     }
+     public override void CameraController(){
+
      }
  }

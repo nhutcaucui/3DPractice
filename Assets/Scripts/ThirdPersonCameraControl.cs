@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class ThirdPersonCameraControl : MonoBehaviour
+public class ThirdPersonCameraControl : AbstractCamera
 {
     // Start is called before the first frame update
      public Transform target;
@@ -30,6 +30,14 @@ public class ThirdPersonCameraControl : MonoBehaviour
          Vector3 angles = transform.eulerAngles;
          rotationYAxis = angles.y;
          rotationXAxis = angles.x;
+         if(target == null){
+         
+            GameObject gObject = GameObject.FindWithTag("Player");
+            if(gObject != null){
+                Debug.Log("found player");
+                target = gObject.transform;
+            }
+         }
          // Make the rigid body not change rotation
      }
      void FixedUpdate(){
@@ -101,5 +109,8 @@ public class ThirdPersonCameraControl : MonoBehaviour
          if (angle > 360F)
              angle -= 360F;
          return Mathf.Clamp(angle, min, max);
+     }
+     public override void CameraController(){
+
      }
  }

@@ -68,7 +68,7 @@ public class FirstPersonCameraControl : AbstractCamera
              Vector3 negDistance = new Vector3(0.0f, 0.0f, currentZoom);
              Vector3 position = rotation * negDistance + target.position;
 
-            target.transform.rotation = rotation;
+            target.transform.Rotate(Vector3.up * velocityX);
             
             transform.position = position;
              transform.rotation = rotation;

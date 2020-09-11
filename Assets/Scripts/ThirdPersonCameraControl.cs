@@ -54,7 +54,7 @@ public class ThirdPersonCameraControl : AbstractCamera
             
             distanceOffset = distance - hit.distance;
             distanceOffset = Mathf.Clamp(distanceOffset, 0, distance);
-            if (hit.transform.tag == "Character")
+            if (hit.transform.tag == "Player")
             {
                 distanceOffset = 0;
             }

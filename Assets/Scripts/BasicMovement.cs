@@ -16,12 +16,17 @@ public class BasicMovement : MonoBehaviour
     public float crouchMultiplier = 0.7f;
     public float crouchHeight = 1f;
     public float originalHeight = 2f;
+    public int jumpTime = 2;
+    public float airJumpModifier = 0.5f;
+    public float airGlideSlowModifier = 0.5f;
+    public float slideTime = 0.5f;
     private float x;
     private float z;
     float upTime;
     float downTime;
     float rightTime;
     float leftTime;
+    int jumpLeft;
     public GameObject cam;
 
     public CharacterController characterController;
@@ -41,6 +46,7 @@ public class BasicMovement : MonoBehaviour
     public KeyCode rightKey = KeyCode.D;
     public KeyCode crouchKey = KeyCode.C;
     public KeyCode jumpKey = KeyCode.Space;
+    public KeyCode sprintKey = KeyCode.LeftShift;
     // Use this for initialization
     void Start()
     {
@@ -56,6 +62,7 @@ public class BasicMovement : MonoBehaviour
 
         if(isGrounded && groundVelocity.y < 0){
             groundVelocity.y = -2f; 
+            jumpLeft = jumpTime;
         }
 
         if(upTime > 0){
@@ -147,7 +154,7 @@ public class BasicMovement : MonoBehaviour
         }
         // z = Input.GetAxis("Vertical");
         // x = Input.GetAxis("Horizontal");
-        Debug.Log(x +" "+ z);
+        //Debug.Log(x +" "+ z);
         Vector3 move = z * transform.forward + x * transform.right;
 
         if(isSprinting && move == Vector3.zero){
@@ -155,7 +162,7 @@ public class BasicMovement : MonoBehaviour
             speed = speed / sprintMultiplier;
         }
 
-        if(isGrounded && Input.GetKeyDown(KeyCode.LeftShift)){
+        if(isGrounded && Input.GetKeyDown(sprintKey)){
             if(isCrouching){
                 isCrouching = false;
                 speed = speed / crouchMultiplier;
@@ -172,7 +179,7 @@ public class BasicMovement : MonoBehaviour
 
         characterController.Move(move * speed * Time.deltaTime);
 
-        if (Input.GetKeyDown(jumpKey) && isGrounded)
+        if (Input.GetKeyDown(jumpKey) && isGrounded && jumpLeft > 0)
         {
             if(isCrouching){
                 isCrouching = false;
@@ -180,12 +187,21 @@ public class BasicMovement : MonoBehaviour
                 groundCheck.position = new Vector3(groundCheck.position.x, groundCheck.position.y - 0.4f, groundCheck.position.z);
             }else{
                 groundVelocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
+                jumpLeft--;
             }
         }
 
+        if (Input.GetKeyDown(jumpKey) && !isGrounded && jumpLeft > 0)
+        {
+            groundVelocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity * airJumpModifier);
+            jumpLeft--;
+        }
+
+        
+
         if(Input.GetKeyDown(crouchKey) && isGrounded){
             if(isSprinting){
-                speed = speed/sprintMultiplier;
+                Invoke("SlideSpeedReduce", slideTime);
                 isSprinting = false;
             }
             if(isCrouching){
@@ -201,14 +217,21 @@ public class BasicMovement : MonoBehaviour
             }
         }
 
-        groundVelocity.y += gravity* Time.deltaTime;
+        if(Input.GetKey(jumpKey) && !isGrounded){
+            if(groundVelocity.y < 0){
+                groundVelocity.y += gravity* Time.deltaTime* airGlideSlowModifier;
+            }else{
+                groundVelocity.y += gravity* Time.deltaTime;
+            }    
+        }else{
+            groundVelocity.y += gravity* Time.deltaTime;
+        }
+        
+        //Debug.Log(groundVelocity.y);
         characterController.Move(groundVelocity *Time.deltaTime);
     }
 
-    void ReduceHeight(){
-
-    }
-    void IncreaseHeight(){
-        
+    void SlideSpeedReduce(){
+        speed = speed/sprintMultiplier;
     }
 }

@@ -45,7 +45,7 @@ public class ThirdPersonCameraControl : AbstractCamera
         Vector3 relativePos = transform.position - (target.position);
         
         RaycastHit hit;
-        if (Physics.Raycast(target.position, relativePos,  out hit, distance-1f))
+        if (Physics.Raycast(target.position, relativePos,  out hit, distance))
         {
             // Debug.DrawLine(target.position, hit.point);
             // distance -= hit.distance;

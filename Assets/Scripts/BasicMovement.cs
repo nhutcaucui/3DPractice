@@ -11,6 +11,8 @@ public class BasicMovement : MonoBehaviour
     public float drag = 20f; //more is faster stoping
     public float gravity = -10f; //more mean faster falling
     public float jumpHeight=2f; //more mean higher jump
+    public float jumpStep = 0.2f; //for hold = height
+    public float peakTime = 0.5f; //time to reach peak jump height
     public float sprintMultiplier = 2f; //more mean faster when run, <1 will result in slower when use run (can be used for walk)
     public float crouchTime=0.5f; //time to enter and exit crouch, lower mean faster
     public float crouchMultiplier = 0.7f; //speed reduce when crouch, >1 will result in faster
@@ -28,6 +30,7 @@ public class BasicMovement : MonoBehaviour
     float rightTime;
     float leftTime;
     int jumpLeft;
+    float currTime;
     public GameObject cam;  //camera (no use yet)
 
     public CharacterController characterController; //character controller (required for the script to work)
@@ -40,6 +43,7 @@ public class BasicMovement : MonoBehaviour
     private Vector3 groundVelocity;
     private bool isCrouching = false;
     private bool isSprinting = false;
+    bool isJumping = false;
 
     public KeyCode forwardKey = KeyCode.W;
     public KeyCode backwardKey = KeyCode.S;
@@ -80,6 +84,7 @@ public class BasicMovement : MonoBehaviour
         if(isGrounded && groundVelocity.y < 0){
             groundVelocity.y = -2f; 
             jumpLeft = jumpTime;
+            currTime = peakTime;
         }
 
         CheckUpTime();
@@ -308,8 +313,11 @@ public class BasicMovement : MonoBehaviour
             else
             {
                 isGrounded = false;
-                groundVelocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
-                jumpLeft = jumpLeft - 1;
+                if (peakTime > 0)
+                    groundVelocity.y = Mathf.Sqrt(jumpHeight * jumpStep * -2f * gravity);
+                else
+                    groundVelocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
+                jumpLeft--;
             }
         }
 
@@ -323,8 +331,16 @@ public class BasicMovement : MonoBehaviour
             {
                v *= airGlideSlowModifier;
             }
+            if(currTime > 0 && groundVelocity.y> 0){
+                groundVelocity.y = Mathf.Sqrt(jumpHeight * jumpStep * -2f * gravity);
+                currTime -=Time.deltaTime;
+            }
         }
         groundVelocity.y += v;
+
+        if(Input.GetKeyUp(jumpKey)){
+            currTime = -1;
+        }
     }
 
     void Crouching(){

@@ -17,6 +17,7 @@ public class BasicMovement : MonoBehaviour
     public float crouchHeight = 1f; //object height when crouch
     public float originalHeight = 2f;   //object height when stand (init height)
     public int jumpTime = 2;    //number of jumps (double jumps)
+    public float delayJumpTimeCheck =0.5f; //time in seconds, how long will the player be able to jump after leaving the ground (usually used in platformer)
     public float airJumpModifier = 0.5f;    //strength of second jump and above (=1 is same strength with initial jump, lower is shorter)
     public float airGlideSlowModifier = 0.5f; //glide slow the landing (reduce gravity);
     public float slideTime = 0.5f; //time slide (time to remove sprint speed when crouch during sprinting)
@@ -56,13 +57,21 @@ public class BasicMovement : MonoBehaviour
     }
     private void FixedUpdate() {
         RaycastHit hit;
-        
         if(Physics.Raycast(groundCheck.position, -Vector3.up, out hit, groundCheckDistance)){
-            Debug.DrawLine(groundCheck.position, hit.point);
             isGrounded = true;
+            CancelInvoke("DelayJump");
         }else{
-            isGrounded = false;
+            if(delayJumpTimeCheck > 0){
+                Invoke("DelayJump", delayJumpTimeCheck);
+            }else{
+                isGrounded = false;
+                if(jumpLeft == jumpTime){
+                    jumpLeft = jumpTime - 1;
+                }
+            }
         }
+        //Debug.Log(isGrounded);
+        Debug.DrawLine(groundCheck.position, groundCheck.position - Vector3.up * groundCheckDistance);
     }
 
     // Update is called once per frame
@@ -102,7 +111,7 @@ public class BasicMovement : MonoBehaviour
 
         Crouching();
         
-        Debug.Log(groundVelocity.y);
+        //Debug.Log(groundVelocity.y);
         characterController.Move(groundVelocity *Time.deltaTime);
     }
 
@@ -284,6 +293,12 @@ public class BasicMovement : MonoBehaviour
     }
 
     void Jumping(){
+        if (Input.GetKeyDown(jumpKey) && !isGrounded && jumpLeft > 0)
+        {
+            groundVelocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity * airJumpModifier);
+            jumpLeft--;
+        }
+
         if (Input.GetKeyDown(jumpKey) && isGrounded && jumpLeft > 0)
         {
             if (isCrouching)
@@ -292,34 +307,24 @@ public class BasicMovement : MonoBehaviour
             }
             else
             {
+                isGrounded = false;
                 groundVelocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
-                jumpLeft--;
+                jumpLeft = jumpLeft - 1;
             }
         }
 
-        if (Input.GetKeyDown(jumpKey) && !isGrounded && jumpLeft > 0)
-        {
-            groundVelocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity * airJumpModifier);
-            jumpLeft--;
-        }
+        
 
-        //groundVelocity.y += gravity * Time.deltaTime;
+        float v = gravity * Time.deltaTime;
 
         if (Input.GetKey(jumpKey) && !isGrounded)
         {
             if (groundVelocity.y < 0)
             {
-                groundVelocity.y += gravity * Time.deltaTime * airGlideSlowModifier;
-            }
-            else
-            {
-                groundVelocity.y += gravity * Time.deltaTime;
+               v *= airGlideSlowModifier;
             }
         }
-        else
-        {
-            groundVelocity.y += gravity * Time.deltaTime;
-        }
+        groundVelocity.y += v;
     }
 
     void Crouching(){
@@ -327,8 +332,13 @@ public class BasicMovement : MonoBehaviour
         {
             if (isSprinting)
             {
+                if(slideTime > 0){
                 Invoke("SlideSpeedReduce", slideTime);
                 isSprinting = false;
+                }
+                else{
+                    StandUp();
+                }
             }
             if (isCrouching)
             {
@@ -339,5 +349,12 @@ public class BasicMovement : MonoBehaviour
                 CrouchDown();
             }
         }
+    }
+    void DelayJump(){
+        isGrounded = false;
+        if(jumpLeft == jumpTime){
+            jumpLeft = jumpTime - 1;
+        }
+        //Debug.Log("delay");
     }
 }

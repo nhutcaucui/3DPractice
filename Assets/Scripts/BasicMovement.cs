@@ -23,14 +23,21 @@ public class BasicMovement : MonoBehaviour
     public float airJumpModifier = 0.5f;    //strength of second jump and above (=1 is same strength with initial jump, lower is shorter)
     public float airGlideSlowModifier = 0.5f; //glide slow the landing (reduce gravity);
     public float slideTime = 0.5f; //time slide (time to remove sprint speed when crouch during sprinting)
+    public float dashTime = 3f; //duration of a dash in second
+    public float dashSpeed = 1f;    //how fast the dash will go in the duration; distance depend on both values
+    public bool canAirDash = false;
     private float x;
     private float z;
+    float dashX;
+    float dashZ;
     float upTime;
     float downTime;
     float rightTime;
     float leftTime;
     int jumpLeft;
     float currTime;
+    float dashTimeLeft;
+
     public GameObject cam;  //camera (no use yet)
 
     public CharacterController characterController; //character controller (required for the script to work)
@@ -43,7 +50,7 @@ public class BasicMovement : MonoBehaviour
     private Vector3 groundVelocity;
     private bool isCrouching = false;
     private bool isSprinting = false;
-    bool isJumping = false;
+    bool isDashing = false;
 
     public KeyCode forwardKey = KeyCode.W;
     public KeyCode backwardKey = KeyCode.S;
@@ -52,6 +59,7 @@ public class BasicMovement : MonoBehaviour
     public KeyCode crouchKey = KeyCode.C;
     public KeyCode jumpKey = KeyCode.Space;
     public KeyCode sprintKey = KeyCode.LeftShift;
+    public KeyCode dashKey = KeyCode.R;
     // Use this for initialization
     void Start()
     {
@@ -63,7 +71,11 @@ public class BasicMovement : MonoBehaviour
         RaycastHit hit;
         if(Physics.Raycast(groundCheck.position, -Vector3.up, out hit, groundCheckDistance)){
             isGrounded = true;
-            CancelInvoke("DelayJump");
+            if (delayJumpTimeCheck > 0)
+            {
+                CancelInvoke("DelayJump");
+            }
+            
         }else{
             if(delayJumpTimeCheck > 0){
                 Invoke("DelayJump", delayJumpTimeCheck);
@@ -98,6 +110,7 @@ public class BasicMovement : MonoBehaviour
         CheckMoveKeyHold();
         CheckMoveKeyUp();
 
+        Dashing();
         // z = Input.GetAxis("Vertical");
         // x = Input.GetAxis("Horizontal");
         // Debug.Log(x +" "+ z);
@@ -110,14 +123,28 @@ public class BasicMovement : MonoBehaviour
 
         Sprinting();
 
-        characterController.Move(move * speed * Time.deltaTime);
-
         Jumping();
 
         Crouching();
         
         //Debug.Log(groundVelocity.y);
-        characterController.Move(groundVelocity *Time.deltaTime);
+        if(!isDashing){
+            characterController.Move(move * speed * Time.deltaTime);
+            characterController.Move(groundVelocity *Time.deltaTime);
+        }else{
+            if(dashTimeLeft > 0){
+                Vector3 moveDist = (dashZ * transform.forward + dashX * transform.right) * dashSpeed * Time.deltaTime;
+                dashTimeLeft -= Time.deltaTime;
+                characterController.Move(moveDist);
+            }else{
+                isDashing =false;
+                x=0;
+                z=0;
+            }
+            if(isGrounded){
+                characterController.Move(groundVelocity * Time.deltaTime);
+            }
+        }
     }
 
     void SlideSpeedReduce(){
@@ -281,10 +308,6 @@ public class BasicMovement : MonoBehaviour
         }
     }
 
-    void Crouch(){
-
-    }
-
     void StandUp(){
         isCrouching = false;
         speed = speed / crouchMultiplier;
@@ -372,5 +395,38 @@ public class BasicMovement : MonoBehaviour
             jumpLeft = jumpTime - 1;
         }
         //Debug.Log("delay");
+    }
+
+    void Dashing(){
+        if(Input.GetKeyDown(dashKey) && !isDashing){
+            if(canAirDash){
+                Dash();
+            }else{
+                if(!isGrounded){
+                    return;
+                }
+                Dash();
+            }
+        }
+    }
+
+    void Dash(){
+        dashX = 0;
+        dashZ = 1;
+        if(Input.GetKey(rightKey)){
+            dashX = 1;
+            dashZ = 0;
+        }else if (Input.GetKey(leftKey)){
+            dashX = -1;
+            dashZ = 0;
+        }
+        if(Input.GetKey(forwardKey)){
+            dashZ = 1;
+        }else if(Input.GetKey(backwardKey)){
+            dashZ = -1;
+        }
+
+        dashTimeLeft = dashTime;
+        isDashing = true;
     }
 }

@@ -12,6 +12,10 @@ public class FirstPersonCameraControl : AbstractCamera
      public float yMaxLimit = 90f;
      public float smoothTime = 10;
      public float zoomValue = 1f;
+    public float shakeDuration = 0.5f;
+    public float shakeMagitude = 0.5f;
+    public float transformRange = 1f;
+    public KeyCode testShakeKey = KeyCode.P;
      float rotationYAxis = 0.0f;
      float rotationXAxis = 0.0f;
      float velocityX = 0.0f;
@@ -19,6 +23,8 @@ public class FirstPersonCameraControl : AbstractCamera
      float currentZoom = 0f;
 
      float distanceOffset;
+     bool isShaking = false;
+     float shakeElapsed = 0f;
      // Use this for initialization
      void Start()
      {
@@ -40,9 +46,13 @@ public class FirstPersonCameraControl : AbstractCamera
          }
          transform.position = target.position;
      }
-     void Update(){
-        
-     }
+    void Update()
+    {
+        if (Input.GetKeyDown(testShakeKey))
+        {
+            isShaking = true;
+        }
+    }
      void LateUpdate()
      {
          if (target)
@@ -69,8 +79,28 @@ public class FirstPersonCameraControl : AbstractCamera
              Vector3 position = rotation * negDistance + target.position;
 
             target.transform.Rotate(Vector3.up * velocityX);
-            
-            transform.position = position;
+
+            if (isShaking)
+            {
+                Vector3 shakePos = position;
+                shakePos.x += Random.Range(-transformRange, transformRange) * shakeMagitude;
+                shakePos.y += Random.Range(-transformRange, transformRange) * shakeMagitude;
+                transform.position = shakePos;
+
+                if (shakeElapsed < shakeDuration)
+                {
+                    shakeElapsed += Time.deltaTime;
+                }
+                else
+                {
+                    shakeElapsed = 0f;
+                    isShaking = false;
+                }
+            }
+            else
+            {
+                transform.position = position;
+            }
              transform.rotation = rotation;
             
              velocityX = Mathf.Lerp(velocityX, 0, Time.deltaTime * smoothTime);

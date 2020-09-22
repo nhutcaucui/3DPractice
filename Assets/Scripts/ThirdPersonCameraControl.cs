@@ -17,6 +17,10 @@ public class ThirdPersonCameraControl : AbstractCamera
      public float zoomValue = 1f;
      public float shoulderOffset = 0f; // neg for left
      public float heightOffset = 0f;
+    public float shakeDuration = 0.5f;
+    public float shakeMagitude = 0.5f;
+    public float transformRange = 1f;
+    public KeyCode testShakeKey = KeyCode.P;
      float rotationYAxis = 0.0f;
      float rotationXAxis = 0.0f;
      float velocityX = 0.0f;
@@ -24,6 +28,8 @@ public class ThirdPersonCameraControl : AbstractCamera
      float currentZoom = 0f;
 
      float distanceOffset;
+     bool isShaking= false;
+     float shakeElapsed = 0f;
      // Use this for initialization
      void Start()
      {
@@ -39,6 +45,12 @@ public class ThirdPersonCameraControl : AbstractCamera
             }
          }
          // Make the rigid body not change rotation
+     }
+     void Update(){
+        if (Input.GetKeyDown(testShakeKey))
+        {
+            isShaking = true;
+        }
      }
      void FixedUpdate(){
         //Debug.DrawRay(transform.position, target.position, Color.cyan, 5, false);
@@ -92,7 +104,24 @@ public class ThirdPersonCameraControl : AbstractCamera
              Vector3 position = rotation * negDistance + target.position;
  
              transform.rotation = rotation;
-             transform.position = position;
+             if(isShaking){
+                 Vector3 shakePos = position;
+                 shakePos.x += Random.Range(-transformRange, transformRange) * shakeMagitude;
+                 shakePos.y += Random.Range(-transformRange, transformRange) * shakeMagitude;
+                 transform.position = shakePos;
+
+                if (shakeElapsed < shakeDuration)
+                {
+                    shakeElapsed += Time.deltaTime;
+                }
+                else
+                {
+                    shakeElapsed = 0f;
+                    isShaking = false;
+                }
+             }else{
+                transform.position = position;
+             }
             target.transform.Rotate(Vector3.up * velocityX);
              velocityX = Mathf.Lerp(velocityX, 0, Time.deltaTime * smoothTime);
              velocityY = Mathf.Lerp(velocityY, 0, Time.deltaTime * smoothTime);
@@ -100,6 +129,8 @@ public class ThirdPersonCameraControl : AbstractCamera
             // velocityX = 0f;
             // velocityY = 0f;
             //transform.LookAt(target);
+            
+            
          }
      }
      public static float ClampAngle(float angle, float min, float max)

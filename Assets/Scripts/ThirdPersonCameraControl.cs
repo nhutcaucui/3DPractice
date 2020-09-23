@@ -20,6 +20,7 @@ public class ThirdPersonCameraControl : AbstractCamera
     public float shakeDuration = 0.5f;
     public float shakeMagitude = 0.5f;
     public float transformRange = 1f;
+    public bool controlPlayerRotation = true;
     public KeyCode testShakeKey = KeyCode.P;
      float rotationYAxis = 0.0f;
      float rotationXAxis = 0.0f;
@@ -122,7 +123,9 @@ public class ThirdPersonCameraControl : AbstractCamera
              }else{
                 transform.position = position;
              }
-            target.transform.Rotate(Vector3.up * velocityX);
+             if(controlPlayerRotation){
+                target.transform.Rotate(Vector3.up * velocityX);
+             }
              velocityX = Mathf.Lerp(velocityX, 0, Time.deltaTime * smoothTime);
              velocityY = Mathf.Lerp(velocityY, 0, Time.deltaTime * smoothTime);
              //Debug.Log(Time.deltaTime * smoothTime);

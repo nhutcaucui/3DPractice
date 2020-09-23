@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -7,7 +8,7 @@ public class BasicMovement : MonoBehaviour
     // Start is called before the first frame update
     public float speed = 10.0f; //more is faster
     public float accelerateSpeed = 10f; //more is faster to reach top speed
-    public float timeToStop = 1f; //max time for speed to reach 0; calculate in seconds; 0 should remove drag
+    public float timeToStop = 1f; //max time for speed to reach 0; calculate in seconds; 0 should remove drag; will create drag when turning in cam dependent mode
     public float drag = 20f; //more is faster stoping
     public float gravity = -10f; //more mean faster falling
     public float jumpHeight=2f; //more mean higher jump
@@ -26,6 +27,10 @@ public class BasicMovement : MonoBehaviour
     public float dashTime = 3f; //duration of a dash in second
     public float dashSpeed = 1f;    //how fast the dash will go in the duration; distance depend on both values
     public bool canAirDash = false;
+    public bool isCamDependent = false;
+    public Transform cam;
+    public float smoothRotationTime = 0.1f;
+    public float smoothSpeed = 1f;
     private float x;
     private float z;
     float dashX;
@@ -38,7 +43,7 @@ public class BasicMovement : MonoBehaviour
     float currTime;
     float dashTimeLeft;
 
-    public GameObject cam;  //camera (no use yet)
+    
 
     public CharacterController characterController; //character controller (required for the script to work)
 
@@ -114,34 +119,71 @@ public class BasicMovement : MonoBehaviour
         // z = Input.GetAxis("Vertical");
         // x = Input.GetAxis("Horizontal");
         // Debug.Log(x +" "+ z);
-        Vector3 move = z * transform.forward + x * transform.right;
-
-        if(isSprinting && move == Vector3.zero){
-            isSprinting = false;
-            speed = speed / sprintMultiplier;
-        }
+        
 
         Sprinting();
 
         Jumping();
 
         Crouching();
-        
-        //Debug.Log(groundVelocity.y);
-        if(!isDashing){
-            characterController.Move(move * speed * Time.deltaTime);
-            characterController.Move(groundVelocity *Time.deltaTime);
-        }else{
-            if(dashTimeLeft > 0){
-                Vector3 moveDist = (dashZ * transform.forward + dashX * transform.right) * dashSpeed * Time.deltaTime;
+
+        Move();
+    }
+
+    private void Move()
+    {
+        Vector3 move = z * transform.forward + x * transform.right;
+
+        if (isSprinting && move == Vector3.zero)
+        {
+            isSprinting = false;
+            speed = speed / sprintMultiplier;
+        }
+        if (!isDashing)
+        {
+            if(isCamDependent){
+            
+                    float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, Mathf.Atan2(x, z) * Mathf.Rad2Deg + cam.eulerAngles.y, ref smoothSpeed, smoothRotationTime);
+                    Quaternion q = Quaternion.Euler(0f, angle, 0f);
+                    if(x!= 0 || z != 0){
+                        transform.rotation = q;
+                    }
+                    float velocity = 0f;
+                    if(Mathf.Abs(x)<Mathf.Abs(z)){
+                        velocity = Mathf.Abs(z);
+                    }else{
+                        velocity = Mathf.Abs(x);
+                    }    
+                        move = velocity * transform.forward;
+
+                characterController.Move(move * speed * Time.deltaTime);
+            }else{
+                characterController.Move(move * speed * Time.deltaTime); 
+            }
+            characterController.Move(groundVelocity * Time.deltaTime);
+        }
+        else
+        {
+            if (dashTimeLeft > 0)
+            {
+                Vector3 moveDist;
+                if(isCamDependent){
+                    moveDist = (transform.forward) * dashSpeed * Time.deltaTime;
+                }
+                else{
+                    moveDist = (dashZ * transform.forward + dashX * transform.right) * dashSpeed * Time.deltaTime;
+                }
                 dashTimeLeft -= Time.deltaTime;
                 characterController.Move(moveDist);
-            }else{
-                isDashing =false;
-                x=0;
-                z=0;
             }
-            if(isGrounded){
+            else
+            {
+                isDashing = false;
+                x = 0;
+                z = 0;
+            }
+            if (isGrounded)
+            {
                 characterController.Move(groundVelocity * Time.deltaTime);
             }
         }

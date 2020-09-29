@@ -25,7 +25,10 @@ public class FirstPersonCameraControl : AbstractCamera
      float distanceOffset;
      bool isShaking = false;
      float shakeElapsed = 0f;
-     // Use this for initialization
+    // Use this for initialization
+    float shakeX;
+    float shakeY;
+    Vector3 shakePos = Vector3.zero;
      void Start()
      {
          Debug.Log("startCamera");
@@ -51,6 +54,8 @@ public class FirstPersonCameraControl : AbstractCamera
         if (Input.GetKeyDown(testShakeKey))
         {
             isShaking = true;
+            shakeX = transform.position.x;
+            shakeY = transform.position.y;
         }
     }
      void LateUpdate()
@@ -82,20 +87,7 @@ public class FirstPersonCameraControl : AbstractCamera
 
             if (isShaking)
             {
-                Vector3 shakePos = position;
-                shakePos.x += Random.Range(-transformRange, transformRange) * shakeMagitude;
-                shakePos.y += Random.Range(-transformRange, transformRange) * shakeMagitude;
-                transform.position = shakePos;
-
-                if (shakeElapsed < shakeDuration)
-                {
-                    shakeElapsed += Time.deltaTime;
-                }
-                else
-                {
-                    shakeElapsed = 0f;
-                    isShaking = false;
-                }
+                cameraShake(position);
             }
             else
             {
@@ -123,4 +115,41 @@ public class FirstPersonCameraControl : AbstractCamera
      public override void CameraController(){
 
      }
+
+    void cameraShake(Vector3 position)
+    {
+        if (shakePos == Vector3.zero)
+        {
+            shakePos = position;
+        }
+        if (shakePos.x != shakeX)
+        {
+            shakePos.x = Mathf.MoveTowards(shakePos.x, shakeX, Time.deltaTime / 0.1f);
+        }
+        else
+        {
+            shakeX = position.x + Random.Range(-transformRange, transformRange) * shakeMagitude;
+        }
+        if (shakePos.y != shakeY)
+        {
+            shakePos.y = Mathf.MoveTowards(shakePos.y, shakeY, Time.deltaTime / 0.1f);
+        }
+        else
+        {
+            shakeY = position.y + Random.Range(-transformRange, transformRange) * shakeMagitude;
+        }
+
+        transform.position = shakePos;
+
+        if (shakeElapsed < shakeDuration)
+        {
+            shakeElapsed += Time.deltaTime;
+        }
+        else
+        {
+            shakeElapsed = 0f;
+            isShaking = false;
+            shakePos = Vector3.zero;
+        }
+    }
  }

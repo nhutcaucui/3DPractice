@@ -111,32 +111,7 @@ public class ThirdPersonCameraControl : AbstractCamera
  
              transform.rotation = rotation;
              if(isShaking){
-                 if(shakePos == Vector3.zero){
-                 shakePos = position;
-                 }
-                 if(shakePos.x != shakeX){
-                     shakePos.x = Mathf.MoveTowards(shakePos.x, shakeX, Time.deltaTime / 0.1f);
-                 }else{
-                     shakeX = position.x + Random.Range(-transformRange, transformRange) * shakeMagitude;
-                 }
-                 if(shakePos.y != shakeY){
-                     shakePos.y = Mathf.MoveTowards(shakePos.y, shakeY, Time.deltaTime / 0.1f);
-                 }else{
-                    shakeY = position.y + Random.Range(-transformRange, transformRange) * shakeMagitude;
-                 }
-                 
-                 transform.position = shakePos;
-
-                if (shakeElapsed < shakeDuration)
-                {
-                    shakeElapsed += Time.deltaTime;
-                }
-                else
-                {
-                    shakeElapsed = 0f;
-                    isShaking = false;
-                    shakePos = Vector3.zero;
-                }
+                 cameraShake(position);
              }else{
                 transform.position = position;
              }
@@ -163,5 +138,41 @@ public class ThirdPersonCameraControl : AbstractCamera
      }
      public override void CameraController(){
 
+     }
+
+     void cameraShake(Vector3 position){
+        if (shakePos == Vector3.zero)
+        {
+            shakePos = position;
+        }
+        if (shakePos.x != shakeX)
+        {
+            shakePos.x = Mathf.MoveTowards(shakePos.x, shakeX, Time.deltaTime / 0.1f);
+        }
+        else
+        {
+            shakeX = position.x + Random.Range(-transformRange, transformRange) * shakeMagitude;
+        }
+        if (shakePos.y != shakeY)
+        {
+            shakePos.y = Mathf.MoveTowards(shakePos.y, shakeY, Time.deltaTime / 0.1f);
+        }
+        else
+        {
+            shakeY = position.y + Random.Range(-transformRange, transformRange) * shakeMagitude;
+        }
+
+        transform.position = shakePos;
+
+        if (shakeElapsed < shakeDuration)
+        {
+            shakeElapsed += Time.deltaTime;
+        }
+        else
+        {
+            shakeElapsed = 0f;
+            isShaking = false;
+            shakePos = Vector3.zero;
+        }
      }
  }

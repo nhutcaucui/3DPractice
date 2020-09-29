@@ -31,6 +31,9 @@ public class ThirdPersonCameraControl : AbstractCamera
      float distanceOffset;
      bool isShaking= false;
      float shakeElapsed = 0f;
+     float shakeX;
+     float shakeY;
+     Vector3 shakePos = Vector3.zero;
      // Use this for initialization
      void Start()
      {
@@ -48,9 +51,11 @@ public class ThirdPersonCameraControl : AbstractCamera
          // Make the rigid body not change rotation
      }
      void Update(){
-        if (Input.GetKeyDown(testShakeKey))
+        if (Input.GetKeyDown(testShakeKey) && isShaking == false)
         {
             isShaking = true;
+            shakeX = transform.position.x;
+            shakeY = transform.position.y;
         }
      }
      void FixedUpdate(){
@@ -106,9 +111,20 @@ public class ThirdPersonCameraControl : AbstractCamera
  
              transform.rotation = rotation;
              if(isShaking){
-                 Vector3 shakePos = position;
-                 shakePos.x += Random.Range(-transformRange, transformRange) * shakeMagitude;
-                 shakePos.y += Random.Range(-transformRange, transformRange) * shakeMagitude;
+                 if(shakePos == Vector3.zero){
+                 shakePos = position;
+                 }
+                 if(shakePos.x != shakeX){
+                     shakePos.x = Mathf.MoveTowards(shakePos.x, shakeX, Time.deltaTime / 0.1f);
+                 }else{
+                     shakeX = position.x + Random.Range(-transformRange, transformRange) * shakeMagitude;
+                 }
+                 if(shakePos.y != shakeY){
+                     shakePos.y = Mathf.MoveTowards(shakePos.y, shakeY, Time.deltaTime / 0.1f);
+                 }else{
+                    shakeY = position.y + Random.Range(-transformRange, transformRange) * shakeMagitude;
+                 }
+                 
                  transform.position = shakePos;
 
                 if (shakeElapsed < shakeDuration)
@@ -119,6 +135,7 @@ public class ThirdPersonCameraControl : AbstractCamera
                 {
                     shakeElapsed = 0f;
                     isShaking = false;
+                    shakePos = Vector3.zero;
                 }
              }else{
                 transform.position = position;
